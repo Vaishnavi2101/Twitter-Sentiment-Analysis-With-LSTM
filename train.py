@@ -16,12 +16,15 @@ df_train.dropna(inplace=True)
 df_train.drop_duplicates(subset=['Tweet'], inplace=True)
 
 def clean_tweet(text):
-    text = re.sub(r'http\S+|www\S+|https\S+', '', text)
+    if not isinstance(text, str):  # Ensure input is a string
+        text = str(text) if pd.notna(text) else ""  # Convert non-null values to string, else empty string
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
     text = re.sub(r'\@\w+|\#', '', text)
     text = re.sub(r'\W', ' ', text)
     text = re.sub(r'\d', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text.lower()
+
 
 df_train['Tweet'] = df_train['Tweet'].apply(clean_tweet)
 train_texts = df_train['Tweet'].values
