@@ -15,6 +15,11 @@ df_train.columns = ['ID', 'Company', 'Sentiment', 'Tweet']
 df_train.drop(columns=['ID', 'Company'], inplace=True)
 df_train.dropna(inplace=True)
 df_train.drop_duplicates(subset=['Tweet'], inplace=True)
+# Find non-string values in the 'Tweet' column
+non_string_tweets = df_train[~df_train['Tweet'].apply(lambda x: isinstance(x, str))]
+
+# Print the problematic rows
+print(non_string_tweets)
 
 def clean_tweet(text):
     if not isinstance(text, str):
@@ -25,7 +30,7 @@ def clean_tweet(text):
     text = re.sub(r'\d', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text.lower()
-
+df_train['Tweet'] = df_train['Tweet'].fillna('').astype(str)
 df_train['Tweet'] = df_train['Tweet'].apply(clean_tweet)
 
 # Encode labels
