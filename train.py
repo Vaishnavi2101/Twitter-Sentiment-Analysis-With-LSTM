@@ -19,9 +19,11 @@ df_train['Tweet'] = df_train['Tweet'].fillna('')
 
 # Text Cleaning Function
 def clean_tweet(text):
-    text = str(text)  # Ensure it's a string
+    if not isinstance(text, str):  # Ensure text is a string
+        text = str(text)
     text = re.sub(r'http\S+|www\S+|https\S+', '', text)  # Remove URLs
     text = re.sub(r'\@\w+|\#', '', text)  # Remove mentions & hashtags
+    text = re.sub(r'[^a-zA-Z\s]', '', text)  # Remove special characters
     text = re.sub(r'\W', ' ', text)  # Remove non-word characters
     text = re.sub(r'\d', ' ', text)  # Remove numbers
     text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
@@ -57,11 +59,15 @@ history = model.fit(
     batch_size=32
 )
 
-# Save model & tokenizer
+
 model.save("sentiment_model.h5")
+print("✅ Model saved successfully!")
 
 with open("tokenizer.pkl", "wb") as f:
     pickle.dump(tokenizer, f)
+print("✅ Tokenizer saved successfully!")
 
-print("Training completed. Model and tokenizer saved successfully!")
+with open("label_encoder.pkl", "wb") as f:
+    pickle.dump(label_encoder, f)
+print("✅ Label encoder saved successfully!")
 
