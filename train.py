@@ -12,27 +12,10 @@ from model import create_model
 # Load datasets
 df_train = pd.read_csv('twitter_training.csv')
 df_train.columns = ['ID', 'Company', 'Sentiment', 'Tweet']
-df_train.drop(columns=['ID', 'Company'], inplace=True)
-
-# Drop rows where 'Tweet' is NaN
-df_train.dropna(subset=['Tweet'], inplace=True)
-
-# Drop duplicate tweets
+df_train.dropna(inplace=True)
 df_train.drop_duplicates(subset=['Tweet'], inplace=True)
-
-# Convert all values in 'Tweet' column to strings
-df_train['Tweet'] = df_train['Tweet'].astype(str)
-
-# Debug: Check for the literal string 'nan' (result of converting NaN to string)
-nan_strings = df_train[df_train['Tweet'].str.lower() == 'nan']
-print("Rows with 'nan' string:\n", nan_strings)
-
-# Replace 'nan' strings with empty strings
-df_train['Tweet'] = df_train['Tweet'].replace('nan', '', regex=False)
 df_train.drop(columns=['ID', 'Company'], inplace=True)
 
-# Debug: Print first few rows before cleaning
-print("Sample Tweets before cleaning:\n", df_train['Tweet'].head())
 
 # Function to clean tweets
 def clean_tweet(text):
@@ -43,8 +26,16 @@ def clean_tweet(text):
     text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
     return text.lower()
 
-# Apply cleaning function
-df_train['Tweet'] = df_train['Tweet'].apply(clean_tweet)
+def safe_clean_tweet(text):
+    try:
+        return clean_tweet(text)
+    except Exception as e:
+        print(f"Error cleaning tweet: {text}, Error: {e}")
+        return ""  # Return empty string for problematic tweets
+
+df_train['Tweet'] = df_train['Tweet'].apply(safe_clean_tweet)
+df_train['Tweet'] = df_train['Tweet'].astype(str)
+
 
 # Debug: Print first few cleaned tweets
 print("Sample Tweets after cleaning:\n", df_train['Tweet'].head())
