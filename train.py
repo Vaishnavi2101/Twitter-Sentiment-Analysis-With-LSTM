@@ -12,29 +12,36 @@ from model import create_model
 # Load datasets
 df_train = pd.read_csv('twitter_training.csv')
 df_train.columns = ['ID', 'Company', 'Sentiment', 'Tweet']
-df_train.dropna(inplace=True)
-df_train.drop_duplicates(subset=['Tweet'], inplace=True)
 df_train.drop(columns=['ID', 'Company'], inplace=True)
 
+# Drop rows where 'Tweet' is NaN
+df_train.dropna(subset=['Tweet'], inplace=True)
+
+# Drop duplicate tweets
+df_train.drop_duplicates(subset=['Tweet'], inplace=True)
+
+# Convert 'Tweet' column to string and replace NaN with empty string
+df_train['Tweet'] = df_train['Tweet'].astype(str).replace('nan', '', regex=False)
+
+# Debug: Check for non-string values
+non_string_values = df_train[~df_train['Tweet'].apply(lambda x: isinstance(x, str))]
+print("Non-string values found:\n", non_string_values)
 
 # Function to clean tweets
 def clean_tweet(text):
-    text = re.sub(r'\@\w+|\#', '', text)  # Remove mentions and hashtags
-    text = re.sub(r'\W', ' ', text)  # Remove special characters
-    text = re.sub(r'\d', ' ', text)  # Remove numbers
+    if not isinstance(text, str):
+        print(f"Non-string value encountered: {text} (Type: {type(text)})")
+        return ""  # Replace problematic values with an empty string
+    text = text.lower()  # Convert to lowercase
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text)  # Remove URLs
+    text = re.sub(r'@\w+', '', text)  # Remove mentions
+    text = re.sub(r'#\w+', '', text)  # Remove hashtags
+    text = re.sub(r'[^a-z\s]', '', text)  # Remove non-alphabetic characters
     text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
-    return text.lower()
+    return text
 
-def safe_clean_tweet(text):
-    try:
-        return clean_tweet(text)
-    except Exception as e:
-        print(f"Error cleaning tweet: {text}, Error: {e}")
-        return ""  # Return empty string for problematic tweets
-
-df_train['Tweet'] = df_train['Tweet'].apply(safe_clean_tweet)
-df_train['Tweet'] = df_train['Tweet'].astype(str)
-
+# Apply cleaning function
+df_train['Tweet'] = df_train['Tweet'].apply(clean_tweet)
 
 # Debug: Print first few cleaned tweets
 print("Sample Tweets after cleaning:\n", df_train['Tweet'].head())
