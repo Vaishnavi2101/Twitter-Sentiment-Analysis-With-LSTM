@@ -13,15 +13,22 @@ from model import create_model
 df_train = pd.read_csv('twitter_training.csv')
 df_train.columns = ['ID', 'Company', 'Sentiment', 'Tweet']
 df_train.drop(columns=['ID', 'Company'], inplace=True)
-df_train.dropna(subset=['Tweet'], inplace=True)  # Remove rows where Tweet is NaN
+
+# Drop rows where 'Tweet' is NaN
+df_train.dropna(subset=['Tweet'], inplace=True)
+
+# Drop duplicate tweets
 df_train.drop_duplicates(subset=['Tweet'], inplace=True)
 
-# Debug: Check non-string values
-non_string_values = df_train[~df_train['Tweet'].apply(lambda x: isinstance(x, str))]
-print("Non-string values found:\n", non_string_values)
-
-# Convert all values to string to prevent TypeError
+# Convert all values in 'Tweet' column to strings
 df_train['Tweet'] = df_train['Tweet'].astype(str)
+
+# Debug: Check for the literal string 'nan' (result of converting NaN to string)
+nan_strings = df_train[df_train['Tweet'].str.lower() == 'nan']
+print("Rows with 'nan' string:\n", nan_strings)
+
+# Replace 'nan' strings with empty strings
+df_train['Tweet'] = df_train['Tweet'].replace('nan', '', regex=False)
 
 # Debug: Print first few rows before cleaning
 print("Sample Tweets before cleaning:\n", df_train['Tweet'].head())
