@@ -13,17 +13,15 @@ from model import create_model
 df_train = pd.read_csv('twitter_training.csv')
 df_train.columns = ['ID', 'Company', 'Sentiment', 'Tweet']
 df_train.drop(columns=['ID', 'Company'], inplace=True)
-df_train.dropna(inplace=True)
+df_train.dropna(subset=['Tweet'], inplace=True)  # Remove rows where Tweet is NaN
 df_train.drop_duplicates(subset=['Tweet'], inplace=True)
 
-# Debug: Print data types before cleaning
-print("Before conversion:", df_train['Tweet'].dtype)
+# Debug: Check non-string values
+non_string_values = df_train[~df_train['Tweet'].apply(lambda x: isinstance(x, str))]
+print("Non-string values found:\n", non_string_values)
 
-# Convert all values in 'Tweet' column to string
+# Convert all values to string to prevent TypeError
 df_train['Tweet'] = df_train['Tweet'].astype(str)
-
-# Debug: Print data types after conversion
-print("After conversion:", df_train['Tweet'].dtype)
 
 # Debug: Print first few rows before cleaning
 print("Sample Tweets before cleaning:\n", df_train['Tweet'].head())
