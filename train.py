@@ -29,22 +29,19 @@ print("Rows with 'nan' string:\n", nan_strings)
 
 # Replace 'nan' strings with empty strings
 df_train['Tweet'] = df_train['Tweet'].replace('nan', '', regex=False)
+df_train.drop(columns=['ID', 'Company'], inplace=True)
 
 # Debug: Print first few rows before cleaning
 print("Sample Tweets before cleaning:\n", df_train['Tweet'].head())
 
 # Function to clean tweets
 def clean_tweet(text):
-    if not isinstance(text, str):  
-        print(f"Non-string value encountered: {text}")  # Debugging statement
-        return ""  # Replace problematic values with an empty string
-    text = text.lower()  # Convert to lowercase
-    text = re.sub(r'http\S+|www\S+|https\S+', '', text)  # Remove URLs
-    text = re.sub(r'@\w+', '', text)  # Remove mentions
-    text = re.sub(r'#\w+', '', text)  # Remove hashtags
-    text = re.sub(r'[^a-z\s]', '', text)  # Remove non-alphabetic characters
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)  # Remove URLs
+    text = re.sub(r'\@\w+|\#', '', text)  # Remove mentions and hashtags
+    text = re.sub(r'\W', ' ', text)  # Remove special characters
+    text = re.sub(r'\d', ' ', text)  # Remove numbers
     text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
-    return text
+    return text.lower()
 
 # Apply cleaning function
 df_train['Tweet'] = df_train['Tweet'].apply(clean_tweet)
