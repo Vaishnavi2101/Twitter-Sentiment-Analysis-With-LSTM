@@ -17,15 +17,16 @@ df_train.drop(columns=['ID', 'Company'], inplace=True)
 # Drop rows where 'Tweet' is NaN
 df_train.dropna(subset=['Tweet'], inplace=True)
 
-# Drop duplicate tweets
-df_train.drop_duplicates(subset=['Tweet'], inplace=True)
+# Drop rows where 'Tweet' is not a string
+df_train = df_train[df_train['Tweet'].apply(lambda x: isinstance(x, str))]
 
-# Convert 'Tweet' column to string and replace NaN with empty string
-df_train['Tweet'] = df_train['Tweet'].astype(str).replace('nan', '', regex=False)
-
-# Debug: Check for non-string values
+# Debug: Check for remaining NaN or non-string values
+print("Number of NaN values in 'Tweet':", df_train['Tweet'].isna().sum())
 non_string_values = df_train[~df_train['Tweet'].apply(lambda x: isinstance(x, str))]
 print("Non-string values found:\n", non_string_values)
+
+# Drop duplicate tweets
+df_train.drop_duplicates(subset=['Tweet'], inplace=True)
 
 # Function to clean tweets
 def clean_tweet(text):
