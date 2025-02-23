@@ -1,28 +1,19 @@
+# evaluate.py
 import numpy as np
 import pandas as pd
 import re
-import pickle
+from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
+from sklearn.preprocessing import LabelEncoder
 
 # Load test dataset
 df_test = pd.read_csv('twitter_validation.csv')
 df_test.columns = ['ID', 'Company', 'Sentiment', 'Tweet']
 df_test.drop(columns=['ID', 'Company'], inplace=True)
+df_test.dropna(inplace=True)
 
-# Load tokenizer, model, and label encoder
-with open("tokenizer.pkl", "rb") as f:
-    tokenizer = pickle.load(f)
-
-with open("label_encoder.pkl", "rb") as f:
-    label_encoder = pickle.load(f)
-
-model = load_model("sentiment_model.h5")
-
-# Text Cleaning Function
 def clean_tweet(text):
-    if pd.isna(text):  # Fix for NaN values
-        return ""
     text = re.sub(r'http\S+|www\S+|https\S+', '', text)
     text = re.sub(r'\@\w+|\#', '', text)
     text = re.sub(r'\W', ' ', text)
@@ -30,16 +21,23 @@ def clean_tweet(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text.lower()
 
-df_test['Tweet'] = df_test['Tweet'].astype(str).apply(clean_tweet)
+df_test['Tweet'] = df_test['Tweet'].apply(clean_tweet)
+test_texts = df_test['Tweet'].values
+test_labels = df_test['Sentiment'].values
 
-# Encode Labels using the loaded label encoder
-test_labels_encoded = label_encoder.transform(df_test['Sentiment'])
+# Load label encoder and model
+label_encoder = LabelEncoder()
+label_encoder.classes_ = np.load('label_encoder_classes.npy', allow_pickle=True)
 
-# Convert texts to sequences
-test_sequences = tokenizer.texts_to_sequences(df_test['Tweet'])
+tokenizer = Tokenizer(num_words=30000, oov_token="<OOV>")
+tokenizer.fit_on_texts(test_texts)
+test_sequences = tokenizer.texts_to_sequences(test_texts)
 test_padded = pad_sequences(test_sequences, maxlen=56, padding='post')
 
-# Evaluate Model
+test_labels_encoded = label_encoder.transform(test_labels)
+model = load_model('sentiment_model.h5')
+
+# Evaluate the model
 test_loss, test_accuracy = model.evaluate(test_padded, test_labels_encoded)
-print(f'Test Loss: {test_loss:.4f}')
-print(f'Test Accuracy: {test_accuracy:.4f}')
+print(f'Test Loss: {test_loss}')
+print(f'Test Accuracy: {test_accuracy}')
