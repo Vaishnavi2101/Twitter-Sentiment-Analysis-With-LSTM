@@ -19,6 +19,8 @@ df_train['Tweet'] = df_train['Tweet'].fillna('')
 
 # Text Cleaning Function
 def clean_tweet(text):
+    if pd.isna(text):  # Check for NaN values and replace with an empty string
+        return ""
     if not isinstance(text, str):  # Ensure text is a string
         text = str(text)
     text = re.sub(r'http\S+|www\S+|https\S+', '', text)  # Remove URLs
@@ -28,6 +30,7 @@ def clean_tweet(text):
     text = re.sub(r'\d', ' ', text)  # Remove numbers
     text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
     return text.lower()
+print(f"Before cleaning, NaN count in 'Tweet' column: {df_train['Tweet'].isna().sum()}")
 
 df_train['Tweet'] = df_train['Tweet'].apply(clean_tweet)
 
